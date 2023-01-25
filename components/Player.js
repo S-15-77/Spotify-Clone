@@ -1,5 +1,5 @@
 import { useSession } from 'next-auth/react';
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useRecoilState } from 'recoil';
 import { currentTrackIdState, isPlayingState } from '../atoms/songAtom';
 import useSpotify from '../hooks/useSpotify';
@@ -14,6 +14,7 @@ import {
   ReplyIcon,
   VolumeUpIcon,
 } from '@heroicons/react/solid'
+import { debounce } from "lodash";
 
 function Player() {
     const spotifyApi = useSpotify();
@@ -55,6 +56,18 @@ function Player() {
             setVolume(50);
         }
     },[currentTrackId,spotifyApi,session])
+
+    useEffect(()=>{
+        if(volume > 0 && volume < 100){
+            debouncedAdjustVolume(volume);
+        }
+    },[volume])
+
+    const debouncedAdjustVolume = useCallback(
+        debounce((volume)=>{
+            spotifyApi.setVolume(volume).catch((e) => {});
+        },500),[]
+    )
   return (
     <div className='h-24 bg-gradient-to-b from-black to-gray-900 text-white grid grid-cols-3 text-xs md:text-base px-2 md:px-8'>
         {/* Left */}
